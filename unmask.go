@@ -32,8 +32,13 @@ func Analyze(label string) Report {
 
 // Skeleton returns the UTS-39 confusable skeleton of s: each rune is replaced by
 // its confusable prototype (confusables.txt MA), collapsing look-alikes onto one
-// form (`pаypаl` with Cyrillic а → `paypal`). The result is a clustering index,
-// never a lookup key.
+// form (`pаypаl` with Cyrillic а → `paypal`). The result is lower-cased so the
+// index is case-insensitive — several prototypes are upper-case (digit 0 → "O"),
+// so without folding `g00gle` would skeletonise to "gOOgle" and fail to JOIN a
+// lower-case brand. The skeleton is a clustering index, never a lookup key.
+//
+// s must be a U-label the caller has already normalised to NFC (as idna.ToUnicode
+// yields); the skeleton does not fold combining marks (see the package doc).
 func Skeleton(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
@@ -44,7 +49,7 @@ func Skeleton(s string) string {
 			b.WriteRune(r)
 		}
 	}
-	return b.String()
+	return strings.ToLower(b.String())
 }
 
 // Confusable reports whether a and b are distinct strings that skeletonise to the
@@ -55,12 +60,16 @@ func Confusable(a, b string) bool {
 	return a != b && Skeleton(a) == Skeleton(b)
 }
 
+// neutral reports whether a script is script-neutral (Common or Inherited: digits,
+// punctuation, combining marks) — excluded from the mixed-script signal.
+func neutral(script string) bool { return script == "Common" || script == "Inherited" }
+
 // Scripts returns the distinct scripts present in s, excluding the script-neutral
 // Common and Inherited (digits, punctuation, combining marks), sorted.
 func Scripts(s string) []string {
 	set := make(map[string]struct{})
 	for _, r := range s {
-		if sc := scriptOf(r); sc != "Common" && sc != "Inherited" {
+		if sc := scriptOf(r); !neutral(sc) {
 			set[sc] = struct{}{}
 		}
 	}
@@ -80,7 +89,7 @@ func MixedScript(s string) bool {
 	first := ""
 	for _, r := range s {
 		sc := scriptOf(r)
-		if sc == "Common" || sc == "Inherited" {
+		if neutral(sc) {
 			continue
 		}
 		if first == "" {
@@ -99,19 +108,13 @@ func MixedScript(s string) bool {
 func Unicode() string { return unicodeVersion }
 
 // scriptOf returns the Unicode Script property of r via binary search over the
-// generated, lo-sorted ranges. Unassigned/unlisted code points report "Unknown".
+// generated ranges (sorted by lo and non-overlapping, so also sorted by hi).
+// Unassigned/unlisted code points — including gaps between ranges — report
+// "Unknown".
 func scriptOf(r rune) string {
-	lo, hi := 0, len(scriptRanges)
-	for lo < hi {
-		mid := int(uint(lo+hi) >> 1)
-		switch sr := scriptRanges[mid]; {
-		case r < sr.lo:
-			hi = mid
-		case r > sr.hi:
-			lo = mid + 1
-		default:
-			return sr.script
-		}
+	i := sort.Search(len(scriptRanges), func(i int) bool { return scriptRanges[i].hi >= r })
+	if i < len(scriptRanges) && scriptRanges[i].lo <= r {
+		return scriptRanges[i].script
 	}
 	return "Unknown"
 }

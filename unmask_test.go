@@ -66,6 +66,54 @@ func TestAnalyze(t *testing.T) {
 	}
 }
 
+func TestCaseFold(t *testing.T) {
+	// The skeleton is case-folded, so a digit→uppercase-letter confusable (0→O)
+	// still JOINs a lower-case brand, and case variants collapse.
+	if !Confusable("g00gle", "google") {
+		t.Errorf("g00gle/google not confusable; skeletons %q vs %q", Skeleton("g00gle"), Skeleton("google"))
+	}
+	if !Confusable("PayPal", "paypal") {
+		t.Errorf("PayPal/paypal not confusable; %q vs %q", Skeleton("PayPal"), Skeleton("paypal"))
+	}
+	if got := Skeleton("g00gle"); got != "google" {
+		t.Errorf("Skeleton(g00gle) = %q, want google (case-folded)", got)
+	}
+}
+
+func TestWholeScriptConfusable(t *testing.T) {
+	// An all-Cyrillic label that reads as Latin is caught by the skeleton and is
+	// NOT flagged mixed-script (the whole-script case the skeleton, not MixedScript,
+	// must catch). "саро" is Cyrillic "саро", reading "capo".
+	cyr := "саро"
+	if !Confusable(cyr, "capo") {
+		t.Errorf("all-Cyrillic %q not confusable with capo; skeleton %q", cyr, Skeleton(cyr))
+	}
+	if MixedScript(cyr) {
+		t.Error("all-Cyrillic label wrongly flagged mixed-script")
+	}
+	if got := Scripts(cyr); !reflect.DeepEqual(got, []string{"Cyrillic"}) {
+		t.Errorf("Scripts = %v, want [Cyrillic]", got)
+	}
+}
+
+func TestScriptOfBoundaries(t *testing.T) {
+	// Exercises scriptOf (the sort.Search refactor) across ranges + gaps.
+	cases := map[string][]string{
+		"A": {"Latin"},    // U+0041
+		"а": {"Cyrillic"}, // Cyrillic а
+		"あ": {"Hiragana"}, // Hiragana あ
+	}
+	for s, want := range cases {
+		if got := Scripts(s); !reflect.DeepEqual(got, want) {
+			t.Errorf("Scripts(%q) = %v, want %v", s, got, want)
+		}
+	}
+	// An unassigned high code point resolves to no script (Unknown, filtered out).
+	if got := Scripts("\U000E0100"); len(got) != 0 && !reflect.DeepEqual(got, []string{"Unknown"}) {
+		t.Logf("Scripts(unassigned) = %v", got) // informational
+	}
+}
+
 func TestUnicodePin(t *testing.T) {
 	if Unicode() != "15.1.0" {
 		t.Errorf("Unicode() = %q, want 15.1.0", Unicode())

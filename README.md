@@ -7,7 +7,8 @@ generated from the Unicode data files.
 
 ```go
 unmask.Confusable("pаypаl", "paypal")  // true  — Cyrillic а reads as Latin a
-unmask.Skeleton("g00gle")              // "gOOgle"   (digit 0 ⇄ O)
+unmask.Confusable("g00gle", "google")  // true  — skeleton is case-folded (0 ⇄ O)
+unmask.Skeleton("g00gle")              // "google"   (digit 0 ⇄ O, lower-cased)
 unmask.Skeleton("amazon")              // "arnazon"  (m ⇄ rn, a multi-rune confusable)
 unmask.MixedScript("pаypаl")           // true  — Latin + Cyrillic (strongest single signal)
 unmask.Analyze("pаypal")               // {Skeleton:"paypal", Scripts:[Cyrillic Latin], MixedScript:true}
@@ -40,7 +41,11 @@ key) half. Opposite disciplines by design:
 | tables | vendored, **pinned** | **generated**, updated freely |
 
 Feed unmask the **U-label** (the pre-punycode Unicode host — from normie's
-`Display` or `idna.ToUnicode`), lower-cased first.
+`Display` or `idna.ToUnicode`), **normalised to NFC** (`idna.ToUnicode` already
+does this). Case need not be normalised — the skeleton is case-folded.
+`MixedScript` is a **raw** signal: it fires on any 2+ scripts, including legitimate
+multilingual labels (Han + Hiragana), so weight it with a target list rather than
+treating it as a standalone verdict.
 
 ## Layout
 
@@ -63,8 +68,10 @@ pinned mapping.
 
 ## Scope (v1)
 
-The skeleton applies the confusables.txt MA mapping. Full UTS-39 additionally folds
-NFD around it (combining-mark canonical equivalence) and defines a five-level
+The skeleton applies the confusables.txt MA mapping and lower-cases. Full UTS-39
+additionally folds NFD around it (combining-mark canonical equivalence; supply NFC
+input as a stand-in) and defines a five-level restriction status (which would stop
+`MixedScript` over-firing on legitimate multilingual labels) —
 restriction status from the augmented script sets; both are deferred — the MA
 mapping alone covers the dominant domain-label homographs and `MixedScript`
 delivers the primary script signal.
