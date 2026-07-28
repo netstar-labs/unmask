@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
 	"net/http"
 	"os"
@@ -160,7 +161,11 @@ func emit(path, version string, skeleton map[rune]string, ranges []scriptRange) 
 	}
 	b.WriteString("}\n")
 
-	return os.WriteFile(path, []byte(b.String()), 0o644)
+	src, err := format.Source([]byte(b.String()))
+	if err != nil {
+		return fmt.Errorf("format generated source: %w", err)
+	}
+	return os.WriteFile(path, src, 0o644)
 }
 
 func hexRune(s string) rune {
