@@ -47,14 +47,24 @@ does this). Case need not be normalised — the skeleton is case-folded.
 multilingual labels (Han + Hiragana), so weight it with a target list rather than
 treating it as a standalone verdict.
 
+## Documentation
+
+- **Start here** — [docs/introduction.md](docs/introduction.md) ·
+  [docs/executive-summary.md](docs/executive-summary.md)
+- **Deep dive** — [docs/architecture.md](docs/architecture.md)
+- **Operations** — [docs/userguide.md](docs/userguide.md)
+- **Examples** — [example/README.md](example/README.md)
+
 ## Layout
 
 | File | Purpose |
 |---|---|
 | [unmask.go](unmask.go) | `Skeleton`, `Confusable`, `Scripts`, `MixedScript`, `Analyze`, `Unicode` |
-| [tables.go](tables.go) | generated confusable map + script ranges (Unicode 15.1.0) |
+| [tables.go](tables.go) | generated confusable map + script ranges (Unicode 17.0.0) |
 | [internal/gen/](internal/gen/main.go) | the generator — `go run ./internal/gen` (re-fetches + regenerates) |
 | [doc.go](doc.go) | package doc — the JOIN rule and the UTS-46/UTS-39 split |
+| [app/unmask/](app/unmask/main.go) | the CLI — `skeleton` · `check` · `version` |
+| [docs/](docs/) | the introduction / executive-summary / architecture / userguide quartet |
 
 ## Regenerating on a new Unicode release
 

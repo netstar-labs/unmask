@@ -115,7 +115,7 @@ func TestScriptOfBoundaries(t *testing.T) {
 }
 
 func TestUnicodePin(t *testing.T) {
-	if Unicode() != "15.1.0" {
-		t.Errorf("Unicode() = %q, want 15.1.0", Unicode())
+	if Unicode() != "17.0.0" {
+		t.Errorf("Unicode() = %q, want 17.0.0", Unicode())
 	}
 }

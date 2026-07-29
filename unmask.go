@@ -107,6 +107,19 @@ func MixedScript(s string) bool {
 // migration stamp.
 func Unicode() string { return unicodeVersion }
 
+// Map returns the confusable prototype of r — the rune(s) r collapses to in the
+// skeleton — and whether r has a mapping. A prototype can be several runes (a
+// multi-rune confusable such as m → "rn"), so it is returned as a []rune; an unmapped
+// rune returns (nil, false) and skeletonises to itself. It exposes the raw per-rune
+// confusables table for callers that need the mapping directly — a confusability-weighted
+// substitution cost, a look-alike generator — without re-parsing the Unicode data.
+func Map(r rune) ([]rune, bool) {
+	if p, ok := confusable[r]; ok {
+		return []rune(p), true
+	}
+	return nil, false
+}
+
 // scriptOf returns the Unicode Script property of r via binary search over the
 // generated ranges (sorted by lo and non-overlapping, so also sorted by hi).
 // Unassigned/unlisted code points — including gaps between ranges — report
