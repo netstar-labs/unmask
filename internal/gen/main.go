@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	version := flag.String("v", "15.1.0", "Unicode version")
+	version := flag.String("v", "17.0.0", "Unicode version")
 	dir := flag.String("dir", "", "read data files from this local dir instead of fetching")
 	out := flag.String("o", "tables.go", "output file")
 	flag.Parse()
