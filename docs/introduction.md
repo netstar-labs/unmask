@@ -53,7 +53,7 @@ unmask answers one question — *is this a glyph look-alike of a target, and doe
 mix scripts?* — and refuses the neighbouring ones. It does not decode punycode,
 lower-case aside, or normalise: the caller feeds it the U-label (the pre-punycode
 Unicode host, as `idna.ToUnicode` yields) already in NFC. It is not an edit-distance
-metric (that is the sibling `twist`) and not a phonetic one (`echo`); it is the glyph
+metric (that is the sibling `snare`) and not a phonetic one (`echo`); it is the glyph
 axis, and only that. That discipline keeps it a pure function you can drop into a
 detector in three lines and unit-test against Unicode's own confusables data in
 isolation.

@@ -147,7 +147,7 @@ later refinements, not pre-built:
   only case need not be normalised.
 - **No built-in target-list / `Set` type.** The skeleton is the indexing primitive; a
   consumer buckets its brands by `Skeleton` in three lines and owns its target
-  projection and normalisation — exactly as `twist` and `echo` consumers do. The
+  projection and normalisation — exactly as `snare` and `echo` consumers do. The
   rune-level accessor `Map(rune) ([]rune, bool)` exposes the raw confusable mapping for
   callers that need it (a confusability-weighted cost, a look-alike generator); it is
   additive and does not change the skeleton contract.
@@ -160,7 +160,7 @@ target projection and query normalisation:
 | Consumer | Signal | Wiring |
 |---|---|---|
 | Brand monitor | a `homograph_suspect` term | normalise to the U-label (idna.ToUnicode, NFC), bucket brands by `Skeleton`, then look up `Skeleton(candidate)` and weight `MixedScript`. Adding a scored term to a trained model triggers a retrain + model-version bump on the consumer side, not unmask. |
-| CT-log tailer (`vigil`) | glyph filter on observed SANs | skeletonise each observed name and JOIN against the brand skeleton bucket, alongside the edit (`twist`) and phonetic (`echo`) terms. |
+| CT-log tailer (`vigil`) | glyph filter on observed SANs | skeletonise each observed name and JOIN against the brand skeleton bucket, alongside the edit (`snare`) and phonetic (`echo`) terms. |
 | `twister` homograph generator | generate → detect round-trip | every homograph variant `twister` emits for a brand must be `Confusable` with that brand — the differential test the two share. |
 
 ## Layout

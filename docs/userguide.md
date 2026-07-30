@@ -166,7 +166,7 @@ it as informational, not a compatibility contract.
 ## When to reach past unmask
 
 unmask is the glyph axis and only that. If you need to catch a **typo** (`paypa1`,
-`gooogle`) reach for the edit-distance sibling `twist`; a **homophone** (`fone`,
+`gooogle`) reach for the edit-distance sibling `snare`; a **homophone** (`fone`,
 `kwik`) is the phonetic sibling `echo`; and the **A-label / lookup key** (punycode
 round-trip, UTS-46 mapping) is `idna`. A brand monitor runs all four and combines the
 terms. Within unmask itself, the deferred refinements — the NFD fold and the UTS-39

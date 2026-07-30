@@ -4,7 +4,7 @@
 confusable look-alike labels by the **UTS-39 skeleton**. Reduce a label to a
 canonical form under which every visual look-alike collides (`Skeleton`), then JOIN
 that skeleton against a brand target list (`Confusable`) to find squats. It is the
-glyph sibling of `twist` (edit distance) and `echo` (phonetic) — the same "reduce to
+glyph sibling of `snare` (edit distance) and `echo` (phonetic) — the same "reduce to
 a key, then match" shape, over *appearance* instead of spelling or sound.
 
 **Why it exists.** A homograph squat — `pаypаl` with a Cyrillic `а`, `аpple`,
@@ -42,7 +42,7 @@ Within the brand matcher family it is the third axis:
 
 | Axis | Repo | Distance |
 |---|---|---|
-| edits | `twist` | Damerau-Levenshtein |
+| edits | `snare` | Damerau-Levenshtein |
 | sound | `echo` | Double Metaphone / Soundex |
 | **glyphs** | **`unmask`** | **UTS-39 skeleton** |
 
@@ -50,7 +50,7 @@ A brand monitor scores a candidate on all three and combines the terms; unmask i
 glyph term. Feed it the caller-normalised U-label (from normie's `Display` or
 `idna.ToUnicode`) in NFC; it owns no target list and no normalisation.
 
-**What it is not.** Not an edit-distance metric (`twist`), not a phonetic one
+**What it is not.** Not an edit-distance metric (`snare`), not a phonetic one
 (`echo`), not a punycode decoder or lookup-key mapper (`idna`), not a resolver or
 classifier. And in v1, not full UTS-39: it applies the MA mapping plus lower-casing
 but defers the NFD fold (supply NFC input) and the five-level restriction status
