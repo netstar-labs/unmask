@@ -43,6 +43,25 @@ func TestMixedScript(t *testing.T) {
 		}
 	}
 }
+
+// An unassigned code point (a gap between Script ranges) or a Private Use Area
+// rune is not a real script; scriptOf's documented fallback reports "Unknown"
+// for both, and neutral() must treat "Unknown" the same as Common/Inherited so
+// a single real script alongside one of these doesn't register as mixed-script.
+func TestUnknownScriptIsNeutral(t *testing.T) {
+	for _, s := range []string{
+		"apple\U000E01F0", // Private Use Area (Supplementary A)
+		"apple͸",          // an unassigned gap in the Greek block
+	} {
+		if got := MixedScript(s); got {
+			t.Errorf("MixedScript(%q) = true, want false (scripts=%v)", s, Scripts(s))
+		}
+		if got := Scripts(s); !reflect.DeepEqual(got, []string{"Latin"}) {
+			t.Errorf("Scripts(%q) = %v, want [Latin] (Unknown must be excluded)", s, got)
+		}
+	}
+}
+
 func TestScripts(t *testing.T) {
 	if got := Scripts("pаypal"); !reflect.DeepEqual(got, []string{"Cyrillic", "Latin"}) {
 		t.Errorf("Scripts = %v, want [Cyrillic Latin]", got)

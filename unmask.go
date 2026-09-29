@@ -12,7 +12,7 @@ type Report struct {
 	// input — see [Confusable].
 	Skeleton string
 	// Scripts are the distinct Unicode scripts present in the label, excluding the
-	// script-neutral Common and Inherited, sorted. One entry is single-script.
+	// script-neutral Common, Inherited, and Unknown, sorted. One entry is single-script.
 	Scripts []string
 	// MixedScript reports whether the label mixes two or more scripts — the
 	// strongest single homograph signal, and independent of any target list.
@@ -71,11 +71,18 @@ func Confusable(a, b string) bool {
 }
 
 // neutral reports whether a script is script-neutral (Common or Inherited: digits,
-// punctuation, combining marks) — excluded from the mixed-script signal.
-func neutral(script string) bool { return script == "Common" || script == "Inherited" }
+// punctuation, combining marks; or Unknown: unassigned code points and gaps between
+// ranges, per scriptOf's fallback) — excluded from the mixed-script signal. An
+// unassigned code point is not a real script, so counting it as one would make an
+// unassigned or private-use rune alongside a single real script register as
+// "mixed" — a false-positive direction rather than a genuine cross-script signal.
+func neutral(script string) bool {
+	return script == "Common" || script == "Inherited" || script == "Unknown"
+}
 
 // Scripts returns the distinct scripts present in s, excluding the script-neutral
-// Common and Inherited (digits, punctuation, combining marks), sorted.
+// Common and Inherited (digits, punctuation, combining marks) and Unknown
+// (unassigned code points and gaps between ranges), sorted.
 func Scripts(s string) []string {
 	set := make(map[string]struct{})
 	for _, r := range s {
@@ -92,7 +99,7 @@ func Scripts(s string) []string {
 }
 
 // MixedScript reports whether s mixes two or more scripts (ignoring the neutral
-// Common and Inherited). A Latin label with a single Cyrillic look-alike is mixed;
+// Common, Inherited, and Unknown). A Latin label with a single Cyrillic look-alike is mixed;
 // an all-Cyrillic label that reads as Latin is NOT (that is a whole-script
 // confusable, caught by [Skeleton], not this).
 func MixedScript(s string) bool {
