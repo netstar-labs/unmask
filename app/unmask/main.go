@@ -89,18 +89,7 @@ func skeleton(args []string) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%v\n", label, r.Skeleton, scripts, r.MixedScript)
 	}
 
-	if len(args) > 0 {
-		for _, label := range args {
-			emit(label)
-		}
-		return nil
-	}
-	// No label arguments: read one label per line from stdin.
-	sc := newLineScanner(os.Stdin)
-	for sc.Scan() {
-		emit(strings.TrimSpace(sc.Text()))
-	}
-	return sc.Err()
+	return forEachLabel(args, emit)
 }
 
 // check JOINs each label against the brand list in -t and reports the actionable
@@ -150,18 +139,20 @@ func check(args []string) error {
 		}
 	}
 
-	if labels := fs.Args(); len(labels) > 0 {
-		for _, label := range labels {
+	return forEachLabel(fs.Args(), emit)
+}
+
+// forEachLabel calls emit once per label: the given args when non-empty, else one
+// label per line read from stdin. Shared by skeleton and check so the two
+// subcommands' input handling can't drift apart.
+func forEachLabel(args []string, emit func(string)) error {
+	if len(args) > 0 {
+		for _, label := range args {
 			emit(label)
 		}
 		return nil
 	}
-	// No label arguments: read one label per line from stdin.
-	sc := newLineScanner(os.Stdin)
-	for sc.Scan() {
-		emit(strings.TrimSpace(sc.Text()))
-	}
-	return sc.Err()
+	return scanLines(os.Stdin, emit)
 }
 
 // readLines reads path as newline-delimited entries, trimming surrounding
@@ -173,13 +164,23 @@ func readLines(path string) ([]string, error) {
 	}
 	defer f.Close()
 	var out []string
-	sc := newLineScanner(f)
-	for sc.Scan() {
-		if line := strings.TrimSpace(sc.Text()); line != "" {
+	err = scanLines(f, func(line string) {
+		if line != "" {
 			out = append(out, line)
 		}
+	})
+	return out, err
+}
+
+// scanLines calls fn once per line of r, trimmed of surrounding whitespace. It
+// does not filter blank lines itself — a caller that must skip them does so in
+// fn (see readLines).
+func scanLines(r io.Reader, fn func(string)) error {
+	sc := newLineScanner(r)
+	for sc.Scan() {
+		fn(strings.TrimSpace(sc.Text()))
 	}
-	return out, sc.Err()
+	return sc.Err()
 }
 
 // newLineScanner returns a bufio.Scanner over r that tolerates lines up to 1 MiB.
