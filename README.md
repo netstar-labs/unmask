@@ -19,9 +19,10 @@ unmask.Analyze("pаypal")               // {Skeleton:"paypal", Scripts:[Cyrillic
 **The skeleton is many-to-one and NEVER a lookup key.** `раypal.com` (Cyrillic)
 skeletonises to the same string as the real `paypal.com`; using `skeleton ==
 skeleton` as a block rule would flag the *legitimate* brand because someone
-registered its homograph. Detection is a JOIN with a not-equal guard —
+registered its homograph. Detection is a JOIN with a case-fold-aware guard —
 `Confusable(candidate, brand)` — against the target list that is the actual
-product.
+product; the guard is case-insensitive because DNS names are ("PayPal.com" and
+"paypal.com" are one identity, not two).
 
 `MixedScript` is the second, independent signal (a Latin label with one Cyrillic
 character is suspicious with no target list). A **whole-script** confusable — an
@@ -59,7 +60,7 @@ treating it as a standalone verdict.
 
 | File | Purpose |
 |---|---|
-| [unmask.go](unmask.go) | `Skeleton`, `Confusable`, `Scripts`, `MixedScript`, `Analyze`, `Unicode` |
+| [unmask.go](unmask.go) | `Skeleton`, `Confusable`, `Scripts`, `MixedScript`, `Analyze`, `Map`, `Unicode` |
 | [tables.go](tables.go) | generated confusable map + script ranges (Unicode 17.0.0) |
 | [internal/gen/](internal/gen/main.go) | the generator — `go run ./internal/gen` (re-fetches + regenerates) |
 | [doc.go](doc.go) | package doc — the JOIN rule and the UTS-46/UTS-39 split |

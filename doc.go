@@ -12,10 +12,13 @@
 // `раypal.com` (Cyrillic) skeletonises to the same string as the real
 // `paypal.com`. Using skeleton==skeleton as a block rule would flag the
 // legitimate brand because someone registered its homograph — a catastrophic
-// false positive. Detection is a JOIN with a not-equal guard, which [Confusable]
-// encodes: Confusable(candidate, brand) == (skeleton(candidate) == skeleton(brand)
-// && candidate != brand), evaluated against the target list that is the actual
-// product.
+// false positive. Detection is a JOIN with a guard, which [Confusable] encodes:
+// Confusable(candidate, brand) == (skeleton(candidate) == skeleton(brand) &&
+// !EqualFold(candidate, brand)), evaluated against the target list that is the
+// actual product. The guard is case-fold-, not byte-, exact — DNS names are
+// case-insensitive, so "PayPal.com" and "paypal.com" are one identity, not two;
+// a byte-exact guard would still flag the brand against itself the moment it
+// appears in a different case anywhere in the pipeline.
 //
 // [MixedScript] is the second, independent signal: a label mixing scripts (Latin +
 // Cyrillic) is suspicious on its own, with no target list. A whole-script

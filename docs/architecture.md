@@ -12,11 +12,11 @@ label (U-label, NFC) ─▶ Skeleton: for each rune, confusable[r] or r ─▶ l
                                                                             │
                         brand target list ─▶ (bucket by Skeleton, caller-owned)
                                                                             │
-                        Confusable(label, brand) = skeleton(label)==skeleton(brand) && label!=brand
+                        Confusable(label, brand) = skeleton(label)==skeleton(brand) && !EqualFold(label,brand)
                                                                             ▼
                                                        JOIN hit (label is a squat of brand)
 
-label ─▶ Scripts: scriptOf(r) per rune, drop Common/Inherited, dedup+sort ─▶ []script
+label ─▶ Scripts: scriptOf(r) per rune, drop Common/Inherited/Unknown, dedup+sort ─▶ []script
                                                                             │
                         MixedScript = 2+ distinct non-neutral scripts ──────┘  (independent signal, no target list)
 ```
@@ -47,16 +47,27 @@ decisions carry the correctness:
 `Confusable(a, b)` is the detection test and the entire safety story:
 
 ```go
-func Confusable(a, b string) bool { return a != b && Skeleton(a) == Skeleton(b) }
+func Confusable(a, b string) bool { return !strings.EqualFold(a, b) && Skeleton(a) == Skeleton(b) }
 ```
 
-The `a != b` guard is not a micro-optimisation — it is the reason the detector is
-safe to ship. The skeleton is **many-to-one**: `раypal` (Cyrillic) and the genuine
+The guard is not a micro-optimisation — it is the reason the detector is safe to
+ship. The skeleton is **many-to-one**: `раypal` (Cyrillic) and the genuine
 `paypal` share a skeleton by construction. A block rule keyed on the bare skeleton
 would flag the legitimate brand the moment someone registered its homograph.
-`Confusable` fires only when the two *distinct* strings collide, evaluated as a JOIN
-`Confusable(candidate, brand)` against the target list — never `skeleton == skeleton`
-alone, and never the skeleton as a stored key.
+`Confusable` fires only when the two *distinct identities* collide, evaluated as
+a JOIN `Confusable(candidate, brand)` against the target list — never
+`skeleton == skeleton` alone, and never the skeleton as a stored key.
+
+The guard is **case-fold-insensitive** (`strings.EqualFold`), not byte-exact
+(`!=`). DNS names are case-insensitive, so `"PayPal.com"` and `"paypal.com"` are
+one identity, not two — a byte-exact guard would let that pair through (both
+sides are pure ASCII, so they trivially share a lower-cased skeleton) and report
+the brand's own domain as confusable with itself the moment it appears in a
+different case anywhere in the pipeline (a human-typed brand list vs. a
+lower-cased candidate stream, say). Confirmed this introduces no false-negative
+risk: cross-script confusable pairs (Cyrillic/Latin) never fold together under
+Go's simple case-fold, so every genuine homograph — including the digit-`0`/
+letter-`O` case, which is not a case variant — is still caught.
 
 ## The generated tables + the Unicode pin (`tables.go`, `internal/gen`)
 

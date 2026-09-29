@@ -13,6 +13,7 @@ unmask.Confusable("paypal", "paypal") // false     — identical; a brand is not
 unmask.Scripts("pаypаl")             // ["Cyrillic" "Latin"]
 unmask.MixedScript("pаypаl")         // true       — Latin + Cyrillic
 unmask.Analyze("pаypal")             // {Skeleton:"paypal", Scripts:["Cyrillic" "Latin"], MixedScript:true}
+unmask.Map('m')                      // (['r' 'n'], true) — the raw per-rune prototype
 unmask.Unicode()                     // "17.0.0"   — the tables' Unicode release
 ```
 
@@ -23,9 +24,12 @@ unmask.Unicode()                     // "17.0.0"   — the tables' Unicode relea
   index, never a lookup key** (see below). The prototype can be multi-rune (`m`→`rn`)
   and can invert case before folding (`0`→`O`→`o`), so do not assume length or that
   digits survive (`1`→`l`).
-- **`Confusable(a, b) bool`** — the detection test: `a != b && Skeleton(a) ==
-  Skeleton(b)`. Use it as a JOIN, `Confusable(candidate, brand)`. The `a != b` guard
-  is what keeps it from flagging the legitimate brand against its own homograph.
+- **`Confusable(a, b) bool`** — the detection test: `!strings.EqualFold(a, b) &&
+  Skeleton(a) == Skeleton(b)`. Use it as a JOIN, `Confusable(candidate, brand)`.
+  The guard is case-fold-insensitive, not byte-exact — DNS names are
+  case-insensitive, so `"PayPal.com"`/`"paypal.com"` are one identity, not two —
+  and is what keeps the function from flagging the legitimate brand against its
+  own homograph (or against itself in a different case).
 - **`Scripts(s) []string`** — the distinct Unicode scripts in `s`, excluding the
   neutral `Common`/`Inherited` (digits, punctuation, combining marks), sorted. A
   single entry means single-script.
@@ -33,6 +37,12 @@ unmask.Unicode()                     // "17.0.0"   — the tables' Unicode relea
   independent, target-list-free homograph signal — but a *raw* one (see the contract).
 - **`Analyze(s) Report`** — `{Skeleton, Scripts, MixedScript}` in one pass, for when
   you want all three signals.
+- **`Map(r) ([]rune, bool)`** — the raw per-rune confusable table `Skeleton` is
+  built on: the prototype rune(s) `r` collapses to, and whether `r` has a mapping
+  at all. A prototype can be multi-rune (`m`→`['r' 'n']`); an unmapped rune
+  returns `(nil, false)` and skeletonises to itself. For callers building their
+  own tooling directly on the mapping — a confusability-weighted substitution
+  cost, a look-alike generator — without re-deriving it from `Skeleton`.
 - **`Unicode() string`** — the Unicode release the tables were generated from.
   Informational (the skeleton is never a stored key), so it bumps freely — not a
   migration stamp.

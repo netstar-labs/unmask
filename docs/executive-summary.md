@@ -21,13 +21,17 @@ unmask does.
   (`pаypаl` → `paypal`, `g00gle` → `google`, `amazon` → `arnazon` via the `m`→`rn`
   multi-rune prototype). A clustering index, never a lookup key.
 - **`Confusable(a, b) bool`** — the correct detection test: the skeletons match *and*
-  the raw strings differ. Used as a JOIN against the brand list; the not-equal guard
-  is what stops it flagging the legitimate brand against its own homograph.
+  the two are distinct identities (case-fold-insensitive, since DNS names are
+  case-insensitive — `"PayPal"`/`"paypal"` is one identity, not two). Used as a
+  JOIN against the brand list; the guard is what stops it flagging the
+  legitimate brand against its own homograph — or against itself in another case.
 - **`Scripts(s) []string` / `MixedScript(s) bool`** — the distinct Unicode scripts in
-  a label (excluding the neutral Common/Inherited) and whether it mixes 2+ — an
-  independent, target-list-free homograph signal.
+  a label (excluding the neutral Common/Inherited/Unknown) and whether it mixes 2+ —
+  an independent, target-list-free homograph signal.
 - **`Analyze(s) Report`** — all three (`Skeleton`, `Scripts`, `MixedScript`) in one
   pass.
+- **`Map(r) ([]rune, bool)`** — the raw per-rune confusable prototype `Skeleton` is
+  built on, for callers building their own tooling directly on the mapping.
 - **`Unicode() string`** — the Unicode release the tables were generated from
   (informational, not a migration stamp — the skeleton is never a stored key).
 - **No dependencies, no state, no configuration** — standard library only, tables

@@ -31,10 +31,13 @@ collapsing is the whole point. Which means the skeleton is **never a lookup key*
 `раypal.com` (Cyrillic) skeletonises to the very same string as the real
 `paypal.com`, so a rule that blocked "any label whose skeleton is `paypal`" would
 block the legitimate brand the instant a squatter registered its look-alike — a
-catastrophic false positive. Detection is a **JOIN with a not-equal guard**, not a
-block rule: `Confusable(candidate, brand)` fires only when the skeletons match *and*
-the raw strings differ, evaluated against the brand target list that is the actual
-product. Reduce, then JOIN — never reduce and look up.
+catastrophic false positive. Detection is a **JOIN with a guard**, not a block
+rule: `Confusable(candidate, brand)` fires only when the skeletons match *and*
+the two are distinct identities, evaluated against the brand target list that
+is the actual product. "Distinct" is case-fold-aware, not byte-exact — DNS
+names are case-insensitive, so `PayPal.com` and `paypal.com` name one identity,
+not two, and the guard treats them that way. Reduce, then JOIN — never reduce
+and look up.
 
 ## The second signal, and why you ship both
 
