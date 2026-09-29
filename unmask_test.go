@@ -43,7 +43,6 @@ func TestMixedScript(t *testing.T) {
 		}
 	}
 }
-
 func TestScripts(t *testing.T) {
 	if got := Scripts("pаypal"); !reflect.DeepEqual(got, []string{"Cyrillic", "Latin"}) {
 		t.Errorf("Scripts = %v, want [Cyrillic Latin]", got)
@@ -68,15 +67,22 @@ func TestAnalyze(t *testing.T) {
 
 func TestCaseFold(t *testing.T) {
 	// The skeleton is case-folded, so a digit→uppercase-letter confusable (0→O)
-	// still JOINs a lower-case brand, and case variants collapse.
+	// still JOINs a lower-case brand.
 	if !Confusable("g00gle", "google") {
 		t.Errorf("g00gle/google not confusable; skeletons %q vs %q", Skeleton("g00gle"), Skeleton("google"))
 	}
-	if !Confusable("PayPal", "paypal") {
-		t.Errorf("PayPal/paypal not confusable; %q vs %q", Skeleton("PayPal"), Skeleton("paypal"))
-	}
 	if got := Skeleton("g00gle"); got != "google" {
 		t.Errorf("Skeleton(g00gle) = %q, want google (case-folded)", got)
+	}
+	// A pure case variant is the SAME DNS identity, not a homograph of it — DNS
+	// names are case-insensitive, so "PayPal"/"paypal" name one thing. Confusable
+	// must not flag an identity against itself just because it appears in a
+	// different case (the false positive its != guard exists to prevent).
+	if Confusable("PayPal", "paypal") {
+		t.Errorf("PayPal/paypal reported confusable; must be false (same identity, case-insensitive)")
+	}
+	if Confusable("PayPal.com", "paypal.com") {
+		t.Error("PayPal.com/paypal.com reported confusable; must be false (same DNS name)")
 	}
 }
 

@@ -52,12 +52,22 @@ func Skeleton(s string) string {
 	return strings.ToLower(b.String())
 }
 
-// Confusable reports whether a and b are distinct strings that skeletonise to the
-// same form — the correct UTS-39 detection test. Use it as a JOIN against a brand
-// target list (Confusable(candidate, brand)); never as skeleton == skeleton alone,
-// which would flag the legitimate brand against its own homograph.
+// Confusable reports whether a and b are distinct identities that skeletonise to
+// the same form — the correct UTS-39 detection test. Use it as a JOIN against a
+// brand target list (Confusable(candidate, brand)); never as skeleton == skeleton
+// alone, which would flag the legitimate brand against its own homograph.
+//
+// "Distinct identities" is case-fold-insensitive, not byte-exact: DNS names are
+// case-insensitive, so "PayPal.com" and "paypal.com" are the same identity, not
+// two different ones. A byte-exact guard would let that pair through (both are
+// pure ASCII, so they trivially skeletonise to the same lower-cased form) and
+// report the brand's own domain as confusable with itself the moment it appears
+// in a different case anywhere in the pipeline (a human-typed brand list vs. a
+// lower-cased candidate stream, say) — exactly the false positive this guard
+// exists to prevent, just arriving through the case channel instead of the
+// Unicode-homograph channel.
 func Confusable(a, b string) bool {
-	return a != b && Skeleton(a) == Skeleton(b)
+	return !strings.EqualFold(a, b) && Skeleton(a) == Skeleton(b)
 }
 
 // neutral reports whether a script is script-neutral (Common or Inherited: digits,
