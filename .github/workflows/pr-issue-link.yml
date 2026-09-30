@@ -1,0 +1,12 @@
+name: pr-issue-link
+on: { pull_request: { types: [opened, edited, synchronize] } }
+jobs:
+  pr-issue-link:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BODY: ${{ github.event.pull_request.body }}
+        # Block scalar (run: |) so the literal '#' in the message is not parsed as
+        # a YAML comment. BODY via env, not inlined, to avoid script injection.
+        run: |
+          echo "$BODY" | grep -Eiq '(clos|fix|resolv)e?[sd]? +#[0-9]+' || { echo "PR must close an issue — add a Closes #N line"; exit 1; }

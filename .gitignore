@@ -1,0 +1,14 @@
+*.test
+.vscode/
+.claude
+**/.DS_Store
+**/~*
+_bin/
+_dev/
+sandbox/
+install/
+docs/plan/
+/unmask
+build/install/
+build/bin/
+build/host
